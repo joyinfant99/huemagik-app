@@ -6,8 +6,10 @@ import numpy as np
 from sklearn.cluster import KMeans
 import traceback
 
+print("Starting HueMagik backend...")
+
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "https://yourusername.github.io"}})
+CORS(app, resources={r"/*": {"origins": ["https://yourusername.github.io", "http://localhost:3000"]}})
 
 def get_colors(image, number_of_colors):
     try:
@@ -63,8 +65,9 @@ def process_image():
 
 @app.route('/test', methods=['GET'])
 def test():
-    return jsonify({'message': 'Backend is working!'}), 200
+    return jsonify({'message': 'HueMagik Backend is working!'}), 200
 
 if __name__ == '__main__':
+    print("HueMagik backend is running!")
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
