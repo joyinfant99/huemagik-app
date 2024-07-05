@@ -9,7 +9,7 @@ import traceback
 print("Starting HueMagik backend...")
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://joyinfant99.github.io", "http://localhost:3000"]}})
+CORS(app, resources={r"/*": {"origins": ["https://joyinfant99.github.io/huemagik-app/", "http://localhost:3000"]}})
 
 def get_colors(image, number_of_colors):
     try:
