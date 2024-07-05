@@ -4,6 +4,10 @@
 /node_modules
 /.pnp
 .pnp.js
+huemagik-backend/
+*.py
+*.pyc
+__pycache__/
 
 # testing
 /coverage
