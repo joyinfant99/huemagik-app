@@ -9,7 +9,7 @@ import traceback
 print("Starting HueMagik backend...")
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["https://joyinfant99.github.io/huemagik-app/", "http://localhost:3000"]}})
+CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins for now, restrict in production
 
 def get_colors(image, number_of_colors):
     try:
@@ -46,7 +46,7 @@ def process_image():
             return jsonify({'error': 'No image file provided'}), 400
         
         image_file = request.files['image']
-        number_of_colors = int(request.form.get('colors', 9))
+        number_of_colors = int(request.form.get('colors', 5))  # Changed to 5 to match frontend
         
         # Open the image using Pillow
         image = Image.open(image_file)
@@ -57,6 +57,7 @@ def process_image():
         if colors is None:
             return jsonify({'error': 'Failed to process image'}), 500
         
+        print(f"Processed colors: {colors}")  # Log the processed colors
         return jsonify({'colors': colors})
     except Exception as e:
         print(f"Error in process_image: {str(e)}")
