@@ -23,7 +23,9 @@ function App() {
 
     try {
       const response = await axios.post('https://cors-anywhere.herokuapp.com/http://huemagik-backend-env.eba-dmg3y9rq.us-west-2.elasticbeanstalk.com/process_image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data',
+          'Access-Control-Allow-Origin': '*'
+         }
       });
       
       if (response.data && response.data.colors) {
