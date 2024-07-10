@@ -58,7 +58,7 @@ function App() {
   };
 
   const openCamera = () => {
-    // Camera functionality remains the same
+    // Camera functionality remains the same as
     // ...
   };
 
