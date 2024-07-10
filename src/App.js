@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa';
 import { jsPDF } from "jspdf";
 import './App.css';
-
+// joy
 function App() {
   const [palette, setPalette] = useState([]);
   const [currentPaletteIndex, setCurrentPaletteIndex] = useState(0);
