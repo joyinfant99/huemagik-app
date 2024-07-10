@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa';
 import { jsPDF } from "jspdf";
 import './App.css';
+import { proxyFetch } from './proxy.js';
 // joy
 function App() {
   const [palette, setPalette] = useState([]);
@@ -21,7 +22,7 @@ function App() {
     formData.append('colors', 5);  // Number of colors to extracts
 
     try {
-      const response = await axios.post('http://huemagik-backend-env.eba-dmg3y9rq.us-west-2.elasticbeanstalk.com/process_image', formData, {
+      const response = proxyFetch('/process_image', {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
