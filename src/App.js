@@ -22,7 +22,7 @@ function App() {
     formData.append('colors', 5);  // Number of colors to extracts
 
     try {
-      const response = await axios.post('https://cors-anywhere.herokuapp.com/http://huemagik-backend-env.eba-dmg3y9rq.us-west-2.elasticbeanstalk.com/process_image', formData, {
+      const response = await axios.post('https://cors-anywhere.herokuapp.com/http://huemagik-flask-env.eba-hfn28mmv.us-west-2.elasticbeanstalk.com/process_image', formData, {
         headers: { 'Content-Type': 'multipart/form-data',
           'Access-Control-Allow-Origin': '*'
          }
