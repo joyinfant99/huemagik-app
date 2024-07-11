@@ -32,3 +32,8 @@ __pycache__/
 .DS_Store
 
 joyinfant_accessKeys.csv
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
