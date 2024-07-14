@@ -4,6 +4,9 @@ import { motion } from 'framer-motion';
 import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa';
 import './App.css';
 
+// API URL
+const API_URL = 'https://api.skillmagik.com';
+
 function App() {
   const [palette, setPalette] = useState([]);
   const [currentPaletteIndex, setCurrentPaletteIndex] = useState(0);
@@ -20,10 +23,8 @@ function App() {
     formData.append('colors', 5);  // Number of colours to extract
 
     try {
-      const response = await axios.post('https://huemagik.us-west-2.elasticbeanstalk.com/process_image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data',
-          'Access-Control-Allow-Origin': 'https://skillmagik.com'
-         },
+      const response = await axios.post(`${API_URL}/process_image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });
       
