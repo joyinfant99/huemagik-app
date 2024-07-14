@@ -20,7 +20,7 @@ function App() {
     formData.append('colors', 5);  // Number of colors to extract
 
     try {
-      const response = await axios.post('http://huemagik-app.us-west-2.elasticbeanstalk.com/process_image', formData, {
+      const response = await axios.post('http://huemagik.us-west-2.elasticbeanstalk.com/process_image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });
