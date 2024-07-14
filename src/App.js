@@ -3,7 +3,7 @@ import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa';
 import './App.css';
-p
+
 function App() {
   const [palette, setPalette] = useState([]);
   const [currentPaletteIndex, setCurrentPaletteIndex] = useState(0);
