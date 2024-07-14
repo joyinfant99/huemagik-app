@@ -22,7 +22,7 @@ function App() {
     try {
       const response = await axios.post('http://huemagik.us-west-2.elasticbeanstalk.com/process_image', formData, {
         headers: { 'Content-Type': 'multipart/form-data',
-          'Access-Control-Allow-Origin': 'http://skillmagik.com'
+          'Access-Control-Allow-Origin': 'https://skillmagik.com'
          },
         withCredentials: true
       });
