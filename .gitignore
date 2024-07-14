@@ -33,7 +33,7 @@ __pycache__/
 
 joyinfant_accessKeys.csv
 
-# Elastic Beanstalk Files
+# Elastic Beanstalk File
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
