@@ -1,19 +1,13 @@
 {
   "files": {
-    "main.css": "/huemagik-app/static/css/main.dfe79fb9.css",
-    "main.js": "/huemagik-app/static/js/main.bfa82058.js",
-    "static/js/239.2b901caf.chunk.js": "/huemagik-app/static/js/239.2b901caf.chunk.js",
-    "static/js/213.6bd44632.chunk.js": "/huemagik-app/static/js/213.6bd44632.chunk.js",
-    "static/js/732.33975c88.chunk.js": "/huemagik-app/static/js/732.33975c88.chunk.js",
-    "index.html": "/huemagik-app/index.html",
-    "main.dfe79fb9.css.map": "/huemagik-app/static/css/main.dfe79fb9.css.map",
-    "main.bfa82058.js.map": "/huemagik-app/static/js/main.bfa82058.js.map",
-    "239.2b901caf.chunk.js.map": "/huemagik-app/static/js/239.2b901caf.chunk.js.map",
-    "213.6bd44632.chunk.js.map": "/huemagik-app/static/js/213.6bd44632.chunk.js.map",
-    "732.33975c88.chunk.js.map": "/huemagik-app/static/js/732.33975c88.chunk.js.map"
+    "main.css": "/static/css/main.dfe79fb9.css",
+    "main.js": "/static/js/main.83b412f5.js",
+    "index.html": "/index.html",
+    "main.dfe79fb9.css.map": "/static/css/main.dfe79fb9.css.map",
+    "main.83b412f5.js.map": "/static/js/main.83b412f5.js.map"
   },
   "entrypoints": [
     "static/css/main.dfe79fb9.css",
-    "static/js/main.bfa82058.js"
+    "static/js/main.83b412f5.js"
   ]
 }
