@@ -31,7 +31,6 @@ venv/
 __pycache__/
 .DS_Store
 
-joyinfant_accessKeys.csv
 
 # Elastic Beanstalk File
 .elasticbeanstalk/*
