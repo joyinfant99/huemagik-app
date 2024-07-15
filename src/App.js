@@ -1,10 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa';
+import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes, FaInfoCircle } from 'react-icons/fa';
+import { jsPDF } from "jspdf";
 import './App.css';
 
-// API URL
 const API_URL = 'https://huemagik-render.onrender.com';
 
 function App() {
@@ -13,8 +13,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const processImage = async (file) => {
     setIsLoading(true);
@@ -22,12 +33,14 @@ function App() {
 
     const formData = new FormData();
     formData.append('image', file);
-    formData.append('colors', 5);  // Number of colours to extract
+    formData.append('colors', 5);  // Number of colors to extract
 
     try {
       const response = await axios.post(`${API_URL}/process_image`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+        },
+        withCredentials: false,
       });
       
       if (response.data && response.data.colors) {
@@ -42,7 +55,13 @@ function App() {
       }
     } catch (error) {
       console.error('Error processing image:', error);
-      setError(`Failed to process the image: ${error.message}`);
+      if (error.response) {
+        setError(`Server error: ${error.response.status} - ${error.response.data}`);
+      } else if (error.request) {
+        setError('No response received from server. Please check your internet connection.');
+      } else {
+        setError(`Error: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -56,22 +75,16 @@ function App() {
     }
   };
 
-  const deleteImage = () => {
-    setUploadedImage(null);
-    setPalette([]);
-    setError(null);
-  };
-
-  const openCamera = async () => {
+  const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        setShowCamera(true);
       }
     } catch (err) {
-      console.error("Error accessing camera:", err);
-      setError("Failed to access camera. Please make sure you've granted the necessary permissions.");
+      console.error("Error accessing the camera:", err);
+      setError("Unable to access the camera. Please make sure you've granted the necessary permissions.");
     }
   };
 
@@ -79,22 +92,22 @@ function App() {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
-      setUploadedImage(imageDataUrl);
-
-      // Convert data URL to File object
-      fetch(imageDataUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
-          processImage(file);
-        });
-
-      // Stop the video stream
-      const stream = videoRef.current.srcObject;
-      const tracks = stream.getTracks();
-      tracks.forEach(track => track.stop());
+      canvasRef.current.toBlob((blob) => {
+        const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+        setUploadedImage(URL.createObjectURL(file));
+        processImage(file);
+      }, 'image/jpeg');
+      setShowCamera(false);
+      if (videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
     }
+  };
+
+  const deleteImage = () => {
+    setUploadedImage(null);
+    setPalette([]);
+    setError(null);
   };
 
   const navigatePalette = (direction) => {
@@ -108,41 +121,27 @@ function App() {
   };
 
   const downloadPalette = (format) => {
-    if (palette.length === 0) {
-      setError("No palette to download. Please upload an image first.");
-      return;
-    }
-
     if (format === 'pdf') {
-      // For PDF, we'll use jsPDF library
-      import('jspdf').then((jsPDF) => {
-        const { jsPDF: JsPDF } = jsPDF;
-        const doc = new JsPDF();
-        
-        palette.forEach((color, index) => {
-          doc.setFillColor(color.hex);
-          doc.rect(20, 20 + (index * 40), 40, 30, 'F');
-          doc.setTextColor(0);
-          doc.text(`${color.hex} - RGB(${color.rgb})`, 70, 35 + (index * 40));
-        });
-        
-        doc.save("palette.pdf");
+      const pdf = new jsPDF();
+      palette.forEach((color, index) => {
+        pdf.setFillColor(color.hex);
+        pdf.rect(20, 20 + (index * 40), 170, 30, 'F');
+        pdf.setTextColor(0);
+        pdf.text(`${color.hex} - RGB(${color.rgb})`, 25, 40 + (index * 40));
       });
+      pdf.save("palette.pdf");
     } else if (format === 'png') {
-      // For PNG, we'll use canvas
       const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
       canvas.width = 300;
-      canvas.height = palette.length * 50;
-
+      canvas.height = palette.length * 60;
+      const ctx = canvas.getContext('2d');
       palette.forEach((color, index) => {
         ctx.fillStyle = color.hex;
-        ctx.fillRect(0, index * 50, 300, 40);
+        ctx.fillRect(0, index * 60, 300, 50);
         ctx.fillStyle = 'black';
         ctx.font = '12px Arial';
-        ctx.fillText(`${color.hex} - RGB(${color.rgb})`, 10, (index * 50) + 25);
+        ctx.fillText(`${color.hex} - RGB(${color.rgb})`, 10, (index * 60) + 40);
       });
-
       const link = document.createElement('a');
       link.download = 'palette.png';
       link.href = canvas.toDataURL();
@@ -163,14 +162,19 @@ function App() {
       </motion.header>
       <div className="content">
         <motion.div 
-          className="box upload-box"
+          className={`box upload-box ${isMobile ? 'mobile' : ''}`}
           whileHover={{ boxShadow: '0 20px 40px -5px rgba(0, 0, 0, 0.3)' }}
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
           <div className="inner-box">
-            {uploadedImage ? (
+            {showCamera ? (
+              <div className="camera-container">
+                <video ref={videoRef} autoPlay playsInline />
+                <button onClick={captureImage}>Capture</button>
+              </div>
+            ) : uploadedImage ? (
               <div className="uploaded-image-container">
                 <img src={uploadedImage} alt="Uploaded" className="uploaded-image" />
                 <motion.button 
@@ -197,7 +201,7 @@ function App() {
                   className="upload-option"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={openCamera}
+                  onClick={startCamera}
                 >
                   <FaCamera className="icon" />
                   <p>CAMERA</p>
@@ -211,22 +215,11 @@ function App() {
               onChange={handleUpload}
               style={{ display: 'none' }}
             />
-            <video ref={videoRef} style={{ display: 'none' }} />
             <canvas ref={canvasRef} style={{ display: 'none' }} width="640" height="480" />
-            {videoRef.current && videoRef.current.srcObject && (
-              <motion.button
-                className="capture-btn"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={captureImage}
-              >
-                Capture
-              </motion.button>
-            )}
           </div>
         </motion.div>
         <motion.div 
-          className="box palette-box"
+          className={`box palette-box ${isMobile ? 'mobile' : ''}`}
           whileHover={{ boxShadow: '0 20px 40px -5px rgba(0, 0, 0, 0.3)' }}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
@@ -286,6 +279,49 @@ function App() {
             )}
           </div>
         </motion.div>
+      </div>
+      <motion.div 
+        className="about-section"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <h2><FaInfoCircle /> About HueMagik</h2>
+        <p>
+          Welcome to HueMagik, where we turn your visual inspirations into stunning color palettes! 
+          Our app doesn't just look at pictures – it sees the world through your eyes. Whether you're 
+          capturing a breathtaking sunset, a vibrant street scene, or your favorite artwork, HueMagik 
+          distills the essence of these moments into a harmonious color scheme.
+        </p>
+        <p>
+          Think of it as having a personal color stylist in your pocket. HueMagik doesn't store or 
+          use your images; instead, it works its magic right before your eyes, transforming visual 
+          input into a palette that captures the mood and energy of your inspiration. Whether you're 
+          a designer seeking the perfect color combination, an artist looking for inspiration, or 
+          simply someone who appreciates the beauty of color in everyday life, HueMagik is your 
+          gateway to a more colorful world.
+        </p>
+        <p>
+          So go ahead, point your camera at something beautiful, or upload that image that's been 
+          inspiring you. Let HueMagik reveal the hidden harmony of colors that surrounds us all. 
+          It's not just about seeing colors – it's about feeling them.
+        </p>
+      </motion.div>
+      <div className="background-animation">
+        {[...Array(5)].map((_, index) => (
+          <div
+            key={index}
+            className="color-circle"
+            style={{
+              width: `${Math.random() * 300 + 100}px`,
+              height: `${Math.random() * 300 + 100}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              backgroundColor: `hsl(${Math.random() * 360}, 70%, 70%)`,
+              animationDelay: `${Math.random() * 20}s`,
+            }}
+          />
+        ))}
       </div>
     </div>
   );
