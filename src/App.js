@@ -5,7 +5,7 @@ import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes } fr
 import './App.css';
 
 // API URL
-const API_URL = 'https://api.skillmagik.com';
+const API_URL = 'https://huemagik-render.onrender.com';
 
 function App() {
   const [palette, setPalette] = useState([]);
