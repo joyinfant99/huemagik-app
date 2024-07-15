@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa';
@@ -13,6 +13,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   const processImage = async (file) => {
     setIsLoading(true);
@@ -60,9 +62,39 @@ function App() {
     setError(null);
   };
 
-  const openCamera = () => {
-    // Camera functionality remains the same
-    // ...
+  const openCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setError("Failed to access camera. Please make sure you've granted the necessary permissions.");
+    }
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+      const imageDataUrl = canvasRef.current.toDataURL('image/jpeg');
+      setUploadedImage(imageDataUrl);
+
+      // Convert data URL to File object
+      fetch(imageDataUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+          processImage(file);
+        });
+
+      // Stop the video stream
+      const stream = videoRef.current.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+    }
   };
 
   const navigatePalette = (direction) => {
@@ -76,8 +108,46 @@ function App() {
   };
 
   const downloadPalette = (format) => {
-    // Download functionality remains the same
-    // ...
+    if (palette.length === 0) {
+      setError("No palette to download. Please upload an image first.");
+      return;
+    }
+
+    if (format === 'pdf') {
+      // For PDF, we'll use jsPDF library
+      import('jspdf').then((jsPDF) => {
+        const { jsPDF: JsPDF } = jsPDF;
+        const doc = new JsPDF();
+        
+        palette.forEach((color, index) => {
+          doc.setFillColor(color.hex);
+          doc.rect(20, 20 + (index * 40), 40, 30, 'F');
+          doc.setTextColor(0);
+          doc.text(`${color.hex} - RGB(${color.rgb})`, 70, 35 + (index * 40));
+        });
+        
+        doc.save("palette.pdf");
+      });
+    } else if (format === 'png') {
+      // For PNG, we'll use canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 300;
+      canvas.height = palette.length * 50;
+
+      palette.forEach((color, index) => {
+        ctx.fillStyle = color.hex;
+        ctx.fillRect(0, index * 50, 300, 40);
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        ctx.fillText(`${color.hex} - RGB(${color.rgb})`, 10, (index * 50) + 25);
+      });
+
+      const link = document.createElement('a');
+      link.download = 'palette.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
   };
 
   return (
@@ -141,6 +211,18 @@ function App() {
               onChange={handleUpload}
               style={{ display: 'none' }}
             />
+            <video ref={videoRef} style={{ display: 'none' }} />
+            <canvas ref={canvasRef} style={{ display: 'none' }} width="640" height="480" />
+            {videoRef.current && videoRef.current.srcObject && (
+              <motion.button
+                className="capture-btn"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={captureImage}
+              >
+                Capture
+              </motion.button>
+            )}
           </div>
         </motion.div>
         <motion.div 
