@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { FaCloudUploadAlt, FaCamera, FaChevronLeft, FaChevronRight, FaTimes, FaInfoCircle } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaCloudUploadAlt, FaChevronLeft, FaChevronRight, FaTimes, FaInfoCircle } from 'react-icons/fa';
 import { jsPDF } from "jspdf";
 import './App.css';
 
@@ -14,8 +14,7 @@ function App() {
   const [error, setError] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [showCamera, setShowCamera] = useState(false);
-  const videoRef = useRef(null);
+  const [colorCount, setColorCount] = useState(5);
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -27,19 +26,17 @@ function App() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const processImage = async (file) => {
+  const processImage = useCallback(async (file) => {
     setIsLoading(true);
     setError(null);
 
     const formData = new FormData();
     formData.append('image', file);
-    formData.append('colors', 5);  // Number of colors to extract
+    formData.append('colors', colorCount);
 
     try {
       const response = await axios.post(`${API_URL}/process_image`, formData, {
-        headers: { 
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: false,
       });
       
@@ -55,52 +52,22 @@ function App() {
       }
     } catch (error) {
       console.error('Error processing image:', error);
-      if (error.response) {
-        setError(`Server error: ${error.response.status} - ${error.response.data}`);
-      } else if (error.request) {
-        setError('No response received from server. Please check your internet connection.');
-      } else {
-        setError(`Error: ${error.message}`);
-      }
+      setError(`Failed to process the image: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [colorCount]);
+
+  useEffect(() => {
+    if (uploadedImage) {
+      processImage(uploadedImage);
+    }
+  }, [uploadedImage, processImage]);
 
   const handleUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setUploadedImage(URL.createObjectURL(file));
-      processImage(file);
-    }
-  };
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setShowCamera(true);
-      }
-    } catch (err) {
-      console.error("Error accessing the camera:", err);
-      setError("Unable to access the camera. Please make sure you've granted the necessary permissions.");
-    }
-  };
-
-  const captureImage = () => {
-    if (videoRef.current && canvasRef.current) {
-      const context = canvasRef.current.getContext('2d');
-      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      canvasRef.current.toBlob((blob) => {
-        const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
-        setUploadedImage(URL.createObjectURL(file));
-        processImage(file);
-      }, 'image/jpeg');
-      setShowCamera(false);
-      if (videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      }
+      setUploadedImage(file);
     }
   };
 
@@ -169,45 +136,43 @@ function App() {
           transition={{ duration: 0.5 }}
         >
           <div className="inner-box">
-            {showCamera ? (
-              <div className="camera-container">
-                <video ref={videoRef} autoPlay playsInline />
-                <button onClick={captureImage}>Capture</button>
-              </div>
-            ) : uploadedImage ? (
-              <div className="uploaded-image-container">
-                <img src={uploadedImage} alt="Uploaded" className="uploaded-image" />
-                <motion.button 
-                  className="delete-btn"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={deleteImage}
-                >
-                  <FaTimes />
-                </motion.button>
-              </div>
-            ) : (
-              <div className="upload-options">
+            <AnimatePresence>
+              {uploadedImage ? (
                 <motion.div 
-                  className="upload-option"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => document.getElementById('fileInput').click()}
+                  className="uploaded-image-container"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 >
-                  <FaCloudUploadAlt className="icon" />
-                  <p>UPLOAD</p>
+                  <img src={URL.createObjectURL(uploadedImage)} alt="Uploaded" className="uploaded-image" />
+                  <motion.button 
+                    className="delete-btn"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={deleteImage}
+                  >
+                    <FaTimes />
+                  </motion.button>
                 </motion.div>
+              ) : (
                 <motion.div 
-                  className="upload-option"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={startCamera}
+                  className="upload-options"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 >
-                  <FaCamera className="icon" />
-                  <p>CAMERA</p>
+                  <motion.div 
+                    className="upload-option"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => document.getElementById('fileInput').click()}
+                  >
+                    <FaCloudUploadAlt className="icon" />
+                    <p>UPLOAD</p>
+                  </motion.div>
                 </motion.div>
-              </div>
-            )}
+              )}
+            </AnimatePresence>
             <input
               type="file"
               id="fileInput"
@@ -238,17 +203,20 @@ function App() {
                   </button>
                   <div className="palette-colors">
                     {palette.map((color, index) => (
-                      <div 
+                      <motion.div 
                         key={index} 
                         className="color-bar"
                         style={{ backgroundColor: color.hex }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
                       >
                         <span className="color-code">
                           {currentPaletteIndex === 0 ? '' : 
                            currentPaletteIndex === 1 ? color.hex : 
                            `RGB(${color.rgb})`}
                         </span>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                   <button onClick={() => navigatePalette('right')} className="nav-btn">
@@ -280,6 +248,18 @@ function App() {
           </div>
         </motion.div>
       </div>
+      <div className="color-count-selector">
+        <label htmlFor="colorCount">Number of colors:</label>
+        <input 
+          type="range" 
+          id="colorCount" 
+          min="3" 
+          max="9" 
+          value={colorCount} 
+          onChange={(e) => setColorCount(parseInt(e.target.value))}
+        />
+        <span>{colorCount}</span>
+      </div>
       <motion.div 
         className="about-section"
         initial={{ opacity: 0, y: 50 }}
@@ -307,18 +287,33 @@ function App() {
           It's not just about seeing colors – it's about feeling them.
         </p>
       </motion.div>
+      <footer className="footer">
+        <p>© 2024 HueMagik. All rights reserved.</p>
+        <p>Created by MagikMods</p>
+        <p>Data processing is GDPR compliant</p>
+      </footer>
       <div className="background-animation">
-        {[...Array(5)].map((_, index) => (
-          <div
+        {[...Array(10)].map((_, index) => (
+          <motion.div
             key={index}
             className="color-circle"
+            initial={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              scale: 0
+            }}
+            animate={{ 
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              scale: Math.random() * 0.5 + 0.5
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Infinity,
+              repeatType: "reverse"
+            }}
             style={{
-              width: `${Math.random() * 300 + 100}px`,
-              height: `${Math.random() * 300 + 100}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
               backgroundColor: `hsl(${Math.random() * 360}, 70%, 70%)`,
-              animationDelay: `${Math.random() * 20}s`,
             }}
           />
         ))}
