@@ -7,6 +7,15 @@ import './App.css';
 
 const API_URL = 'https://huemagik-render.onrender.com';
 
+const colorQuotes = [
+  "Colors are the smiles of nature.",
+  "Life is a painting, and you are the artist. You have on your palette all the colors in the spectrum - the same ones available to Michaelangelo and DaVinci.",
+  "Color is a power which directly influences the soul.",
+  "Colors are the keyboard, the eyes are the harmonies, the soul is the piano with many strings. The artist is the hand that plays, touching one key or another, to cause vibrations in the soul.",
+  "The purest and most thoughtful minds are those which love color the most.",
+  "Color is my day-long obsession, joy and torment.",
+];
+
 function App() {
   const [palette, setPalette] = useState([]);
   const [currentPaletteIndex, setCurrentPaletteIndex] = useState(0);
@@ -15,6 +24,8 @@ function App() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [colorCount, setColorCount] = useState(5);
+  const [progress, setProgress] = useState(0);
+  const [currentQuote, setCurrentQuote] = useState('');
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -26,9 +37,26 @@ function App() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (isLoading) {
+      setCurrentQuote(colorQuotes[Math.floor(Math.random() * colorQuotes.length)]);
+      const interval = setInterval(() => {
+        setProgress((prevProgress) => {
+          if (prevProgress >= 100) {
+            clearInterval(interval);
+            return 100;
+          }
+          return prevProgress + 10;
+        });
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, [isLoading]);
+
   const processImage = useCallback(async (file) => {
     setIsLoading(true);
     setError(null);
+    setProgress(0);
 
     const formData = new FormData();
     formData.append('image', file);
@@ -55,8 +83,10 @@ function App() {
       setError(`Failed to process the image: ${error.message}`);
     } finally {
       setIsLoading(false);
+      setProgress(100);
     }
   }, [colorCount]);
+
 
   useEffect(() => {
     if (uploadedImage) {
@@ -116,16 +146,46 @@ function App() {
     }
   };
 
+  const backgroundVariants = {
+    animate: {
+      backgroundPosition: ['0% 0%', '100% 100%'],
+      transition: {
+        duration: 20,
+        ease: "linear",
+        repeat: Infinity,
+        repeatType: "reverse"
+      }
+    }
+  };
+
   return (
-    <div className="container">
+    <motion.div 
+      className="container"
+      variants={backgroundVariants}
+      animate="animate"
+    >
       <motion.header 
         className="header"
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="title">HUEMAGIK</h1>
-        <p className="subtitle">BY MAGIKMODS</p>
+        <motion.h1 
+          className="title"
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          HUEMAGIK
+        </motion.h1>
+        <motion.p 
+          className="subtitle"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          Unlock Your Perfect Palette
+        </motion.p>
       </motion.header>
       <div className="content">
         <motion.div 
@@ -140,9 +200,10 @@ function App() {
               {uploadedImage ? (
                 <motion.div 
                   className="uploaded-image-container"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
                 >
                   <img src={URL.createObjectURL(uploadedImage)} alt="Uploaded" className="uploaded-image" />
                   <motion.button 
@@ -157,9 +218,10 @@ function App() {
               ) : (
                 <motion.div 
                   className="upload-options"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
                 >
                   <motion.div 
                     className="upload-option"
@@ -192,15 +254,38 @@ function App() {
         >
           <div className="inner-box">
             {isLoading ? (
-              <p className="message">Processing image...</p>
+              <motion.div 
+                className="loading-container"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <p className="message">Generating palette: {progress}%</p>
+                <div className="progress-bar">
+                  <div className="progress" style={{ width: `${progress}%` }}></div>
+                </div>
+                <p className="color-quote">{currentQuote}</p>
+              </motion.div>
             ) : error ? (
-              <p className="message error">{error}</p>
+              <motion.p 
+                className="message error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {error}
+              </motion.p>
             ) : palette.length > 0 ? (
               <>
                 <div className="palette-navigation">
-                  <button onClick={() => navigatePalette('left')} className="nav-btn">
+                  <motion.button 
+                    onClick={() => navigatePalette('left')} 
+                    className="nav-btn"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
                     <FaChevronLeft />
-                  </button>
+                  </motion.button>
                   <div className="palette-colors">
                     {palette.map((color, index) => (
                       <motion.div 
@@ -211,22 +296,32 @@ function App() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
-                        <span className="color-code">
+                        <motion.span 
+                          className="color-code"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.5 + index * 0.1 }}
+                        >
                           {currentPaletteIndex === 0 ? '' : 
                            currentPaletteIndex === 1 ? color.hex : 
                            `RGB(${color.rgb})`}
-                        </span>
+                        </motion.span>
                       </motion.div>
                     ))}
                   </div>
-                  <button onClick={() => navigatePalette('right')} className="nav-btn">
+                  <motion.button 
+                    onClick={() => navigatePalette('right')} 
+                    className="nav-btn"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
                     <FaChevronRight />
-                  </button>
+                  </motion.button>
                 </div>
                 <div className="download-buttons">
                   <motion.button 
                     className="download-btn"
-                    whileHover={{ backgroundColor: '#3A7BC8' }}
+                    whileHover={{ backgroundColor: '#3A7BC8', scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => downloadPalette('pdf')}
                   >
@@ -234,7 +329,7 @@ function App() {
                   </motion.button>
                   <motion.button 
                     className="download-btn"
-                    whileHover={{ backgroundColor: '#3A7BC8' }}
+                    whileHover={{ backgroundColor: '#3A7BC8', scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => downloadPalette('png')}
                   >
@@ -243,12 +338,24 @@ function App() {
                 </div>
               </>
             ) : (
-              <p className="message">Upload an image to generate a palette</p>
+              <motion.p 
+                className="message"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                Upload an image to generate a palette
+              </motion.p>
             )}
           </div>
         </motion.div>
       </div>
-      <div className="color-count-selector">
+      <motion.div 
+        className="color-count-selector"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+      >
         <label htmlFor="colorCount">Number of colors:</label>
         <input 
           type="range" 
@@ -259,12 +366,12 @@ function App() {
           onChange={(e) => setColorCount(parseInt(e.target.value))}
         />
         <span>{colorCount}</span>
-      </div>
+      </motion.div>
       <motion.div 
         className="about-section"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
       >
         <h2><FaInfoCircle /> About HueMagik</h2>
         <p>
@@ -287,13 +394,18 @@ function App() {
           It's not just about seeing colors – it's about feeling them.
         </p>
       </motion.div>
-      <footer className="footer">
+      <motion.footer 
+        className="footer"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.8 }}
+      >
         <p>© 2024 HueMagik. All rights reserved.</p>
-        <p>Created by MagikMods</p>
-        <p>Data processing is GDPR compliant</p>
-      </footer>
+        <p>Created by Joy Infant</p>
+        <p>Uploaded images are not saved</p>
+      </motion.footer>
       <div className="background-animation">
-        {[...Array(10)].map((_, index) => (
+        {[...Array(20)].map((_, index) => (
           <motion.div
             key={index}
             className="color-circle"
@@ -314,11 +426,15 @@ function App() {
             }}
             style={{
               backgroundColor: `hsl(${Math.random() * 360}, 70%, 70%)`,
+              width: `${Math.random() * 100 + 50}px`,
+              height: `${Math.random() * 100 + 50}px`,
+              borderRadius: '50%',
+              position: 'absolute',
             }}
           />
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
