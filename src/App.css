@@ -335,6 +335,23 @@ body {
   opacity: 0.1;
 }
 
+.logo-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  width: 50px; /* Adjust this value based on your logo size */
+  height: auto;
+  margin-right: 15px; /* Space between logo and title */
+}
+
+.title {
+  /* Existing styles remain */
+  display: inline; /* Change from inline-block to inline */
+}
+
 .branding {
   font-size: 1rem;
   color: #666;
