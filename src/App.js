@@ -26,6 +26,7 @@ function App() {
   const [colorCount, setColorCount] = useState(5);
   const [progress, setProgress] = useState(0);
   const [currentQuote, setCurrentQuote] = useState('');
+  const [cache, setCache] = useState({});
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -35,6 +36,21 @@ function App() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const wakeUpBackend = async () => {
+      try {
+        const response = await fetch(`${API_URL}/wake-up`);
+        if (response.ok) {
+          console.log('Backend is awake');
+        }
+      } catch (error) {
+        console.error('Failed to wake up backend:', error);
+      }
+    };
+
+    wakeUpBackend();
   }, []);
 
   useEffect(() => {
@@ -53,16 +69,42 @@ function App() {
     }
   }, [isLoading]);
 
+  const hashImage = async (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target.result;
+        let hash = 0;
+        for (let i = 0; i < result.length; i++) {
+          const char = result.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32-bit integer
+        }
+        resolve(hash.toString());
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const processImage = useCallback(async (file) => {
     setIsLoading(true);
     setError(null);
     setProgress(0);
 
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('colors', colorCount);
-
     try {
+      const imageHash = await hashImage(file);
+      
+      if (cache[imageHash]) {
+        setPalette(cache[imageHash]);
+        setIsLoading(false);
+        setProgress(100);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('colors', colorCount);
+
       const response = await axios.post(`${API_URL}/process_image`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: false,
@@ -75,6 +117,10 @@ function App() {
         }));
         
         setPalette(extractedPalette);
+        setCache(prevCache => ({
+          ...prevCache,
+          [imageHash]: extractedPalette
+        }));
       } else {
         throw new Error('Invalid response from server');
       }
@@ -85,8 +131,7 @@ function App() {
       setIsLoading(false);
       setProgress(100);
     }
-  }, [colorCount]);
-
+  }, [colorCount, cache]);
 
   useEffect(() => {
     if (uploadedImage) {
