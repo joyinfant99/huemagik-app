@@ -9,9 +9,9 @@ const API_URL = 'https://huemagik-render.onrender.com';
 
 const colorQuotes = [
   "Colors are the smiles of nature.",
-  "Life is a painting, and you are the artist. You have on your palette all the colors in the spectrum - the same ones available to Michaelangelo and DaVinci.",
+  "Life is a painting, and you are the artist. You have on your palette all the colors in the spectrum",
   "Color is a power which directly influences the soul.",
-  "Colors are the keyboard, the eyes are the harmonies, the soul is the piano with many strings. The artist is the hand that plays, touching one key or another, to cause vibrations in the soul.",
+  "Colors are the keyboard, the eyes are the harmonies, the soul is the piano with many strings.",
   "The purest and most thoughtful minds are those which love color the most.",
   "Color is my day-long obsession, joy and torment.",
 ];
@@ -184,7 +184,7 @@ function App() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          Unlock Your Perfect Palette
+          Free Color Palette Generator
         </motion.p>
       </motion.header>
       <div className="content">
@@ -375,23 +375,27 @@ function App() {
       >
         <h2><FaInfoCircle /> About HueMagik</h2>
         <p>
-          Welcome to HueMagik, where we turn your visual inspirations into stunning color palettes! 
-          Our app doesn't just look at pictures – it sees the world through your eyes. Whether you're 
-          capturing a breathtaking sunset, a vibrant street scene, or your favorite artwork, HueMagik 
-          distills the essence of these moments into a harmonious color scheme.
+        HueMagik is an innovative, free color palette generator tool designed for designers, artists, and creative enthusiasts. 
+        This powerful color extraction tool harnesses advanced image processing algorithms to 
+        analyze and transform visual inspiration into stunning color schemes.
         </p>
         <p>
-          Think of it as having a personal color stylist in your pocket. HueMagik doesn't store or 
-          use your images; instead, it works its magic right before your eyes, transforming visual 
-          input into a palette that captures the mood and energy of your inspiration. Whether you're 
-          a designer seeking the perfect color combination, an artist looking for inspiration, or 
-          simply someone who appreciates the beauty of color in everyday life, HueMagik is your 
-          gateway to a more colorful world.
+         <h2>🎨 Key Features</h2>
+
+        <ul>
+        <li>Instant Color Extraction: Upload any image and get an instant color palette</li>
+        <li>Dominant Color Identification: Automatically detects and highlights the most prominent colors</li>
+        <li>Custom Palette Creation: Generate unique color combinations from your favorite images</li>
+        <li>Export results in various formats (RGB, HEX, HSL)</li>
+        </ul>
         </p>
         <p>
-          So go ahead, point your camera at something beautiful, or upload that image that's been 
-          inspiring you. Let HueMagik reveal the hidden harmony of colors that surrounds us all. 
-          It's not just about seeing colors – it's about feeling them.
+        <h2>🔒 Data Privacy</h2>
+        <ul>
+        <li>No storage of uploaded images or color data</li>
+        <li>Real-time processing with immediate data discard</li>
+        <li>No access to your color schemes or design ideas</li>
+        </ul>
         </p>
       </motion.div>
       <motion.footer 
@@ -401,8 +405,7 @@ function App() {
         transition={{ duration: 0.5, delay: 0.8 }}
       >
         <p>© 2024 HueMagik. All rights reserved.</p>
-        <p>Created by Joy Infant</p>
-        <p>Uploaded images are not saved</p>
+        <p>Have a question <a href="https://forms.gle/GV6e9FmGFQ4gmVsf6">Write to us</a></p>
       </motion.footer>
       <div className="background-animation">
         {[...Array(20)].map((_, index) => (
