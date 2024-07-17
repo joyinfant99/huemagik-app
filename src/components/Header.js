@@ -9,7 +9,7 @@ const Header = () => (
     className="mb-6 md:mb-8"
   >
     <h1 className="text-3xl md:text-4xl font-bold">HUEMAGIK</h1>
-    <p className="text-sm text-gray-400">by MagikMods</p>
+    <p className="text-sm text-gray-400">Free Color Palette Generator</p>
   </motion.header>
 );
 
